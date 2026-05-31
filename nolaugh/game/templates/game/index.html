@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoLaugh</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'game/css/style.css' %}">
+</head>
+<body class="lobby-page">
+  <div class="hero">
+    <h1 class="logo">😂 NoLaugh</h1>
+    <p class="tagline">Don't. You. Dare. Laugh.</p>
+
+    {% if error %}
+    <div class="error-banner">{{ error }}</div>
+    {% endif %}
+
+    <div class="lobby-cards">
+      <div class="card">
+        <h2>Create Room</h2>
+        <form method="POST" action="/create/">
+          {% csrf_token %}
+          <label>Game Mode</label>
+          <select name="mode">
+            <option value="solo">Solo (one player)</option>
+            <option value="hotseat">Two Players — Hotseat Rotation</option>
+            <option value="first_laugh">Two Players — First to Laugh Loses</option>
+          </select>
+
+          <label>Questions</label>
+          <select name="content_mode">
+            <option value="merged">Mixed (Custom + API)</option>
+            <option value="api">API Only</option>
+            <option value="custom">Custom Only</option>
+          </select>
+
+          <button type="submit" class="btn btn-primary">Create Room</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Join Room</h2>
+        <form method="POST" action="/join/">
+          {% csrf_token %}
+          <label>Room Code</label>
+          <input type="text" name="code" placeholder="ABC123" maxlength="6"
+                 style="text-transform:uppercase" autocomplete="off">
+          <button type="submit" class="btn btn-secondary">Join</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoLaugh — Results</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'game/css/style.css' %}">
+</head>
+<body class="end-page">
+  <div class="screen-inner">
+    <h1>Game Over 😂</h1>
+    <p class="room-tag">Room {{ room.code }}</p>
+
+    <div class="final-scores">
+      {% for player in players %}
+      <div class="score-card {% if forloop.first %}winner{% endif %}">
+        {% if forloop.first %}<span class="crown">👑</span>{% endif %}
+        <div class="player-name">{{ player.name }}</div>
+        <div class="laugh-count">{{ player.laugh_count }} laugh{% if player.laugh_count != 1 %}s{% endif %}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if clips %}
+    <div class="clips-section">
+      <h3>Laugh Clips 🎬</h3>
+      <div class="clips-grid">
+        {% for clip in clips %}
+        <div class="clip-card">
+          <div class="clip-player-name">{{ clip.player.name }}</div>
+          <video src="{{ clip.clip_file.url }}" controls class="clip-video"></video>
+          <a href="{{ clip.clip_file.url }}" download class="btn btn-sm btn-ghost">⬇ Download</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <a href="/" class="btn btn-primary">Play Again</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoLaugh — {{ room.code }}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'game/css/style.css' %}">
+</head>
+<body class="game-page">
+
+<!-- Shared video + canvas — moved between screens by JS -->
+<div id="video-holding-pen" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none">
+  <video id="shared-video" autoplay playsinline muted></video>
+  <canvas id="shared-canvas"></canvas>
+</div>
+
+<!-- ═══════════════════════════════════════════════ LOBBY SCREEN -->
+<div id="screen-lobby" class="screen active">
+  <div class="screen-inner">
+    <h1 class="logo">😂 NoLaugh</h1>
+    <div class="room-code-display">Room: <span class="code">{{ room.code }}</span></div>
+    <p class="mode-label">Mode: <strong>{{ room.get_mode_display }}</strong></p>
+
+    <div id="player-list-lobby" class="player-list"></div>
+
+    <!-- Player 1 join form -->
+    <div id="join-form-p1" class="card">
+      <h3 id="join-title-p1">Player 1 — Enter your name</h3>
+      <input type="text" id="player-name-p1" placeholder="Player 1 name" maxlength="30" autocomplete="off">
+      {% if room.mode != 'solo' %}
+      <div class="face-select" id="face-select-p1">
+        <label>Which face are you? <span style="color:var(--text-dim);font-size:0.8rem">(left or right in frame)</span></label>
+        <div class="face-btns">
+          <button class="face-btn active" data-face="0" data-player="1">Face 1 (Left)</button>
+          <button class="face-btn" data-face="1" data-player="1">Face 2 (Right)</button>
+        </div>
+      </div>
+      {% endif %}
+      <button id="join-btn-p1" class="btn btn-primary">Join as Player 1</button>
+    </div>
+
+    <!-- Player 2 join form (two-player modes only) -->
+    {% if room.mode != 'solo' %}
+    <div id="join-form-p2" class="card" style="display:none">
+      <h3>Player 2 — Enter your name</h3>
+      <input type="text" id="player-name-p2" placeholder="Player 2 name" maxlength="30" autocomplete="off">
+      <div class="face-select" id="face-select-p2">
+        <label>Which face are you?</label>
+        <div class="face-btns">
+          <button class="face-btn" data-face="0" data-player="2">Face 1 (Left)</button>
+          <button class="face-btn active" data-face="1" data-player="2">Face 2 (Right)</button>
+        </div>
+      </div>
+      <button id="join-btn-p2" class="btn btn-secondary">Join as Player 2</button>
+    </div>
+    {% endif %}
+
+    <button id="start-btn" class="btn btn-big" style="display:none">Start Game 🎮</button>
+
+    <div class="custom-prompt-section">
+      <button id="open-custom-btn" class="btn btn-ghost">➕ Add Custom Questions</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ CALIBRATION SCREEN -->
+<div id="screen-calibration" class="screen">
+  <div class="screen-inner">
+    <h2>Calibration</h2>
+    <p id="calibration-msg">Look neutral at the camera...</p>
+    <div class="calibration-timer">
+      <div class="cal-bar-track"><div id="cal-bar" class="cal-bar"></div></div>
+      <span id="cal-countdown">10</span>s
+    </div>
+    <div class="video-wrapper" id="cal-video-slot"></div>
+    <div id="cal-face-status" class="face-status"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ GAME SCREEN -->
+<div id="screen-game" class="screen">
+  <div class="game-layout">
+    <div class="video-section">
+      <div id="game-video-slot" class="game-video-slot"></div>
+      <div id="bomb-incoming" class="bomb-incoming hidden">
+        <div class="bomb-content">
+          <div id="bomb-attacker-label"></div>
+          <div id="bomb-media-area"></div>
+        </div>
+      </div>
+    </div>
+    <div class="hud">
+      <div class="round-info">
+        <span id="round-number">Round 1</span>
+        <span id="hot-seat-label"></span>
+      </div>
+      <div id="players-hud" class="players-hud"></div>
+      <div id="bomb-launcher" class="bomb-launcher hidden">
+        <div class="bomb-title">💣 Laugh Bomb</div>
+        <div class="bomb-type-strip">
+          <button class="bomb-type-btn active" data-type="gif">GIF</button>
+          <button class="bomb-type-btn" data-type="sound">Sound</button>
+        </div>
+        <button id="fire-bomb-btn" class="btn btn-danger">🔥 FIRE</button>
+      </div>
+      <button id="end-game-btn" class="btn btn-ghost btn-sm">End Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ TRUTH OR DARE SCREEN -->
+<div id="screen-truth-dare" class="screen">
+  <div class="screen-inner">
+    <div id="laugh-announcement" class="laugh-announcement"></div>
+    <h2>Choose your fate</h2>
+    <div class="td-buttons">
+      <button id="choose-truth-btn" class="btn btn-truth">🔥 TRUTH</button>
+      <button id="choose-dare-btn" class="btn btn-dare">😈 DARE</button>
+    </div>
+    <div id="prompt-display" class="prompt-display hidden">
+      <div id="prompt-kind-badge"></div>
+      <p id="prompt-text"></p>
+      <button id="prompt-done-btn" class="btn btn-primary">Done ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════════════ END SCREEN -->
+<div id="screen-end" class="screen">
+  <div class="screen-inner">
+    <h1>Game Over 😂</h1>
+    <div id="final-scores" class="final-scores"></div>
+    <div class="clips-section">
+      <h3>Laugh Clips</h3>
+      <div id="clips-grid" class="clips-grid"></div>
+    </div>
+    <a href="/" class="btn btn-primary">New Game</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ CUSTOM PROMPT MODAL -->
+<div id="custom-modal" class="modal hidden">
+  <div class="modal-inner">
+    <h3>Add Custom Question</h3>
+    <div class="type-toggle">
+      <button class="type-btn active" data-kind="truth">Truth</button>
+      <button class="type-btn" data-kind="dare">Dare</button>
+    </div>
+    <textarea id="custom-text" placeholder="Write your question..." rows="3"></textarea>
+    <div class="modal-actions">
+      <button id="save-custom-btn" class="btn btn-primary">Save</button>
+      <button id="close-custom-btn" class="btn btn-ghost">Cancel</button>
+    </div>
+    <div id="custom-save-msg" class="save-msg"></div>
+  </div>
+</div>
+
+<script>
+  const ROOM_CODE = "{{ room.code }}";
+  const ROOM_MODE = "{{ room.mode }}";
+  const BOMB_ASSETS = {{ bomb_assets|safe }};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/dist/face-api.js"></script>
+<script src="{% static 'game/js/laugh_detection.js' %}"></script>
+<script src="{% static 'game/js/media_recorder.js' %}"></script>
+<script src="{% static 'game/js/game.js' %}"></script>
+</body>
+</html>
